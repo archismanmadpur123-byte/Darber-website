@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>City Mart — Find Local Shops Near You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5E8D3;
+    --paper-2:#EFDDBE;
+    --card:#FFFCF5;
+    --ink:#1C2541;
+    --ink-soft:#3A4568;
+    --red:#D6472B;
+    --red-dark:#B23A22;
+    --marigold:#F0A83C;
+    --marigold-dark:#D18E28;
+    --teal:#146B6B;
+    --teal-dark:#0F5252;
+    --line: rgba(28,37,65,0.14);
+    --shadow: 0 6px 0 rgba(28,37,65,0.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(28,37,65,0.06) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family:'Hind Siliguri', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo Da 2', sans-serif;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  img{max-width:100%;display:block;}
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  .wrap{ max-width:1140px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- BUNTING DIVIDER (signature element) ---------- */
+  .bunting{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:2px;
+    height:34px;
+    overflow:hidden;
+    margin: 0 auto;
+    max-width:1140px;
+    padding:0 24px;
+  }
+  .bunting .flag{
+    width:0; height:0;
+    border-left:15px solid transparent;
+    border-right:15px solid transparent;
+    border-top:24px solid var(--c);
+    flex-shrink:0;
+    transform-origin:top center;
+    animation: sway 3.2s ease-in-out infinite;
+  }
+  .bunting .flag:nth-child(odd){ animation-delay: -1.1s; }
+  .bunting .flag:nth-child(3n){ animation-delay: -2s; }
+  @keyframes sway{
+    0%,100%{ transform: rotate(-3deg); }
+    50%{ transform: rotate(3deg); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bunting .flag{ animation:none; }
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--paper);
+    border-bottom:3px solid var(--ink);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+    max-width:1140px; margin:0 auto;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-size:26px; font-weight:800;
+  }
+  .logo-badge{
+    width:40px;height:40px;border-radius:10px;
+    background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff; font-size:20px; font-weight:800;
+    border:2.5px solid var(--ink);
+    transform:rotate(-6deg);
+  }
+  .nav-links{ display:flex; align-items:center; gap:28px; font-weight:600; }
+  .nav-links a{ font-size:15px; }
+  .nav-links a:hover{ color:var(--red); }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:11px 20px;
+    border-radius:10px;
+    font-weight:700;
+    border:2.5px solid var(--ink);
+    box-shadow: var(--shadow);
+    transition:transform .12s ease, box-shadow .12s ease;
+    white-space:nowrap;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:none; }
+  .btn-primary{ background:var(--marigold); color:var(--ink); }
+  .btn-primary:hover{ background:var(--marigold-dark); }
+  .btn-dark{ background:var(--ink); color:var(--paper); }
+  .btn-dark:hover{ background:#141b35; }
+  .btn-teal{ background:var(--teal); color:#fff; }
+  .btn-teal:hover{ background:var(--teal-dark); }
+  .btn-ghost{ background:transparent; border-color:var(--ink); color:var(--ink); box-shadow:none; }
+  .btn-sm{ padding:8px 14px; font-size:13px; border-width:2px; }
+  .hide-mobile{ display:flex; }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:64px 0 44px; }
+  .hero-inner{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center; }
+  .eyebrow{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12.5px;
+    letter-spacing:.08em; text-transform:uppercase; font-weight:600;
+    background:var(--ink); color:var(--paper); padding:6px 12px; border-radius:100px;
+    margin-bottom:16px;
+  }
+  .hero h1{ font-size:44px; line-height:1.15; margin-bottom:16px; }
+  .hero h1 span{ color:var(--red); }
+  .hero p{ font-size:17px; color:var(--ink-soft); max-width:520px; margin-bottom:28px; }
+  .hero-actions{ display:flex; gap:14px; flex-wrap:wrap; }
+
+  .signboard{
+    background:var(--card);
+    border:3px solid var(--ink);
+    border-radius:16px;
+    padding:22px;
+    box-shadow: 8px 8px 0 var(--ink);
+    position:relative;
+  }
+  .signboard::before, .signboard::after{
+    content:''; position:absolute; width:10px; height:10px; border-radius:50%;
+    background:var(--ink); top:12px;
+  }
+  .signboard::before{ left:12px; }
+  .signboard::after{ right:12px; }
+  .search-row{ display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .search-row input, .search-row select{
+    flex:1; min-width:140px;
+    padding:12px 14px; border:2px solid var(--ink); border-radius:10px;
+    font-family:inherit; font-size:15px; background:#fff; color:var(--ink);
+  }
+  .search-row input:focus, .search-row select:focus{ outline:3px solid var(--marigold); outline-offset:1px; }
+  #locStatus{ font-size:13px; color:var(--ink-soft); margin-top:6px; min-height:18px; }
+  #locStatus.ok{ color:var(--teal-dark); font-weight:600; }
+
+  /* ---------- SECTION TITLES ---------- */
+  .section{ padding:52px 0; }
+  .section-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px; }
+  .section-head h2{ font-size:30px; }
+  .section-head p{ color:var(--ink-soft); font-size:15px; margin-top:6px; max-width:480px; }
+  .count-pill{
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;
+    background:var(--teal); color:#fff; padding:6px 12px; border-radius:100px;
+  }
+
+  /* ---------- SHOP GRID ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; }
+  .shop-card{
+    background:var(--card);
+    border:2.5px solid var(--ink);
+    border-radius:14px;
+    padding:18px;
+    position:relative;
+    transition: transform .18s ease, box-shadow .18s ease;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+  .shop-card:hover{ transform:translate(-3px,-3px) rotate(-0.6deg); box-shadow: 8px 8px 0 var(--ink); }
+  .shop-card .rivet{
+    position:absolute; width:7px; height:7px; border-radius:50%; background:var(--ink); opacity:.55;
+  }
+  .rivet.tl{ top:9px; left:9px; } .rivet.tr{ top:9px; right:9px; }
+  .rivet.bl{ bottom:9px; left:9px; } .rivet.br{ bottom:9px; right:9px; }
+  .shop-top{ display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+  .shop-icon{
+    width:52px; height:52px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+    border:2px solid var(--ink);
+  }
+  .shop-name{ font-family:'Baloo Da 2',sans-serif; font-weight:700; font-size:19px; }
+  .shop-cat{ font-size:12.5px; color:var(--ink-soft); font-weight:600; }
+  .shop-addr{ font-size:13.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .shop-meta{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .stars{ color:var(--marigold-dark); font-weight:700; font-size:14px; }
+  .stars small{ color:var(--ink-soft); font-weight:500; }
+  .dist{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600;
+    background:var(--paper-2); padding:4px 9px; border-radius:100px; border:1.5px solid var(--line);
+  }
+  .shop-actions{ display:flex; gap:8px; }
+  .shop-actions .btn{ flex:1; justify-content:center; }
+
+  /* ---------- PRICING / ADD SHOP ---------- */
+  .pricing-wrap{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:32px; align-items:start; }
+  .price-card{
+    background:var(--ink); color:var(--paper);
+    border-radius:18px; padding:32px;
+    border:3px solid var(--ink);
+    box-shadow: 8px 8px 0 var(--red);
+  }
+  .price-card .amount{ font-family:'Baloo Da 2',sans-serif; font-size:48px; font-weight:800; color:var(--marigold); }
+  .price-card .amount span{ font-size:16px; font-family:'Hind Siliguri'; color:var(--paper); font-weight:500; }
+  .price-list{ margin:20px 0; list-style:none; }
+  .price-list li{ padding:8px 0; font-size:14.5px; display:flex; gap:10px; border-bottom:1px dashed rgba(245,232,211,0.2); }
+  .price-list li:last-child{ border-bottom:none; }
+  .tick{ color:var(--marigold); font-weight:800; }
+
+  .form-card{
+    background:var(--card); border:2.5px solid var(--ink); border-radius:16px; padding:26px;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+  .form-row{ margin-bottom:14px; }
+  .form-row label{ display:block; font-size:13px; font-weight:700; margin-bottom:6px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; }
+  .form-row input, .form-row select, .form-row textarea{
+    width:100%; padding:11px 13px; border:2px solid var(--ink); border-radius:9px;
+    font-family:inherit; font-size:14.5px; background:#fff;
+  }
+  .form-row textarea{ resize:vertical; min-height:64px; }
+  .form-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-row.hidden{ display:none; }
+  .loc-row{ display:flex; gap:10px; align-items:flex-start; }
+  .loc-row .form-row{ flex:1; margin-bottom:0; }
+  .loc-btn{ flex-shrink:0; margin-top:22px; }
+  #shopLocStatus{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+  #shopLocStatus.ok{ color:var(--teal-dark); font-weight:600; }
+  .demo-note{
+    font-size:12.5px; color:var(--ink-soft); background:var(--paper-2);
+    border-radius:8px; padding:9px 12px; margin-top:12px; border:1.5px dashed var(--line);
+  }
+  #addShopMsg{ margin-top:14px; font-weight:700; font-size:14.5px; display:none; }
+  #addShopMsg.show{ display:block; }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  .step{ background:var(--card); border:2.5px solid var(--ink); border-radius:14px; padding:22px; }
+  .step .num{
+    font-family:'Baloo Da 2',sans-serif; font-size:22px; font-weight:800;
+    width:38px; height:38px; border-radius:50%; background:var(--marigold);
+    border:2px solid var(--ink); display:flex; align-items:center; justify-content:center;
+    margin-bottom:12px;
+  }
+  .step h3{ font-size:17px; margin-bottom:6px; }
+  .step p{ font-size:14px; color:var(--ink-soft); }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(28,37,65,0.55);
+    z-index:100; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background:var(--card); border:3px solid var(--ink); border-radius:16px;
+    max-width:520px; width:100%; max-height:85vh; overflow-y:auto;
+    padding:26px; box-shadow: 8px 8px 0 var(--ink);
+  }
+  .modal-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+  .modal-close{ font-size:22px; background:none; border:none; cursor:pointer; line-height:1; color:var(--ink-soft); }
+  .review{ border-bottom:1.5px dashed var(--line); padding:12px 0; }
+  .review:last-child{ border-bottom:none; }
+  .review-top{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; }
+  .review p{ font-size:14px; color:var(--ink-soft); margin-top:4px; }
+  #reviewForm{ margin-top:16px; padding-top:16px; border-top:2px solid var(--ink); }
+
+  footer{
+    background:var(--ink); color:var(--paper); padding:36px 0; margin-top:20px;
+  }
+  .foot-inner{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; font-size:13.5px; }
+  .foot-inner a:hover{ color:var(--marigold); }
+
+  @media (max-width:880px){
+    .hero-inner{ grid-template-columns:1fr; }
+    .grid{ grid-template-columns:repeat(2,1fr); }
+    .pricing-wrap{ grid-template-columns:1fr; }
+    .steps{ grid-template-columns:1fr; }
+    .hide-mobile{ display:none; }
+    .hero h1{ font-size:32px; }
+  }
+  @media (max-width:560px){
+    .grid{ grid-template-columns:1fr; }
+    .form-grid2{ grid-template-columns:1fr; }
+    .loc-row{ flex-direction:column; }
+    .loc-btn{ margin-top:0; width:100%; justify-content:center; }
+  }
+
+  :focus-visible{ outline:3px solid var(--teal); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo"><div class="logo-badge">C</div>City Mart</div>
+    <div class="nav-links hide-mobile">
+      <a href="#shops">Find Shops</a>
+      <a href="#pricing">List Your Shop</a>
+      <a href="#how">How It Works</a>
+    </div>
+    <a href="#pricing" class="btn btn-primary btn-sm">List Your Shop — ₹199/mo</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <span class="eyebrow">Local Shops, Real Reviews</span>
+      <h1>Find the <span>best shops</span> near you, in one click</h1>
+      <p>City Mart shows you every shop's location, distance from you, and real customer reviews. From grocery stores to electronics — everything in one place.</p>
+      <div class="hero-actions">
+        <a href="#shops" class="btn btn-teal">Browse Shops</a>
+        <a href="#pricing" class="btn btn-dark">List My Shop</a>
+      </div>
+    </div>
+    <div class="signboard">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search by shop name or area...">
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="locateBtn" style="width:100%;justify-content:center;">📍 Show Distance From My Location</button>
+      <div id="locStatus">Share your location to see the nearest shops first</div>
+    </div>
+  </div>
+</section>
+
+<div class="bunting" id="bunting1"></div>
+
+<section class="section" id="shops">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Shops Near You</h2>
+        <p>Every card shows the shop's rating, address, and — once you share your location — the distance to it.</p>
+      </div>
+      <span class="count-pill mono" id="shopCount">0 shops</span>
+    </div>
+    <div class="grid" id="shopGrid"></div>
+  </div>
+</section>
+
+<div class="bunting" id="bunting2"></div>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>How It Works</h2>
+        <p>Simple for shop owners and customers alike.</p>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>List Your Shop</h3>
+        <p>Fill in the form below with your name, address, and category to list your shop for ₹199/month.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Get Found Nearby</h3>
+        <p>When customers search for shops close to them, yours shows up sorted by distance.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Collect Reviews</h3>
+        <p>Customers leave ratings and reviews — your biggest source of trust in the area.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="bunting" id="bunting3"></div>
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>List Your Shop</h2>
+        <p>Be visible on City Mart for just ₹199/month and let customers find you.</p>
+      </div>
+    </div>
+    <div class="pricing-wrap">
+      <div class="price-card">
+        <div class="mono" style="font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--marigold);font-weight:700;">Shop Owner Plan</div>
+        <div class="amount">₹199<span>/month</span></div>
+        <ul class="price-list">
+          <li><span class="tick">✓</span> Your shop shown in City Mart search</li>
+          <li><span class="tick">✓</span> Location pin + distance feature</li>
+          <li><span class="tick">✓</span> Collect and reply to customer reviews</li>
+          <li><span class="tick">✓</span> Phone / WhatsApp number displayed</li>
+          <li><span class="tick">✓</span> Cancel anytime</li>
+        </ul>
+        <div style="font-size:12.5px;color:var(--paper);opacity:.7;">First month free trial — no card needed (demo)</div>
+      </div>
+
+      <div class="form-card">
+        <h3 style="margin-bottom:16px;">Add Your Shop Details</h3>
+        <form id="addShopForm">
+          <div class="form-grid2">
+            <div class="form-row">
+              <label for="sName">Shop Name</label>
+              <input type="text" id="sName" required placeholder="e.g. Shree Ganesh Stores">
+            </div>
+            <div class="form-row">
+              <label for="sCat">Category</label>
+              <select id="sCat" required>
+                <option value="">Choose a category</option>
+                <option value="Grocery">Grocery</option>
+                <option value="Sweets">Sweets</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing & Sarees">Clothing & Sarees</option>
+                <option value="Pharmacy">Pharmacy</option>
+                <option value="Bakery">Bakery</option>
+                <option value="Hardware">Hardware</option>
+                <option value="__custom">+ Add a custom category</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row hidden" id="customCatRow">
+            <label for="sCatCustom">Custom Category Name</label>
+            <input type="text" id="sCatCustom" placeholder="e.g. Bicycle Repair, Pet Store...">
+          </div>
+
+          <div class="form-row">
+            <label for="sAddr">Address / Area</label>
+            <div class="loc-row">
+              <div class="form-row">
+                <input type="text" id="sAddr" required placeholder="e.g. Buxi Bazaar, Cuttack">
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm loc-btn" id="useMyLocBtn">📍 Use My Location</button>
+            </div>
+            <div id="shopLocStatus">Type an address, or tap "Use My Location" to pin your exact spot on the map.</div>
+          </div>
+
+          <div class="form-grid2">
+            <div class="form-row">
+              <label for="sPhone">Phone / WhatsApp</label>
+              <input type="tel" id="sPhone" required placeholder="98XXXXXXXX">
+            </div>
+            <div class="form-row">
+              <label for="sIcon">Shop Icon</label>
+              <select id="sIcon">
+                <option value="🛒">🛒 General Store</option>
+                <option value="🍬">🍬 Sweets</option>
+                <option value="📱">📱 Electronics</option>
+                <option value="🥻">🥻 Clothing</option>
+                <option value="💊">💊 Pharmacy</option>
+                <option value="🍞">🍞 Bakery</option>
+                <option value="🔧">🔧 Hardware</option>
+                <option value="🏪">🏪 Other</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;">Pay ₹199 & List My Shop</button>
+          <div class="demo-note">This is a demo website — no real payment is taken here. Going live would need a UPI/Razorpay payment gateway and a backend database.</div>
+          <div id="addShopMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>© 2026 City Mart · Local shops, all in one place</div>
+    <div style="display:flex;gap:18px;">
+      <a href="#shops">Shops</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#how">How It Works</a>
+    </div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalShopName"></h3>
+        <div class="stars" id="modalShopRating"></div>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div id="reviewsList"></div>
+    <form id="reviewForm">
+      <div class="form-row">
+        <label for="rName">Your Name</label>
+        <input type="text" id="rName" required placeholder="Enter your name">
+      </div>
+      <div class="form-row">
+        <label for="rRating">Rating</label>
+        <select id="rRating" required>
+          <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+          <option value="4">⭐⭐⭐⭐ (4)</option>
+          <option value="3">⭐⭐⭐ (3)</option>
+          <option value="2">⭐⭐ (2)</option>
+          <option value="1">⭐ (1)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="rText">Write a Review</label>
+        <textarea id="rText" required placeholder="Share your experience..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;">Submit Review</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ---------- Bunting flags generator ----------
+  const colors = ['var(--red)','var(--marigold)','var(--teal)'];
+  document.querySelectorAll('.bunting').forEach(b=>{
+    for(let i=0;i<26;i++){
+      const f = document.createElement('div');
+      f.className='flag';
+      f.style.setProperty('--c', colors[i%3]);
+      b.appendChild(f);
+    }
+  });
+
+  // ---------- Demo shop data (Cuttack, Odisha area) ----------
+  let shops = [
+    { id:1, name:"Shree Jagannath Grocery Store", cat:"Grocery", icon:"🛒", addr:"Buxi Bazaar, Cuttack", phone:"9800000001",
+      lat:20.4685, lng:85.8835, reviews:[
+        {name:"Rahul Das", rating:5, text:"Everything is always fresh, and prices are fair too."},
+        {name:"Priya Nayak", rating:4, text:"Good service, gets a bit crowded in the evening."}
+      ]},
+    { id:2, name:"Maa Kali Sweets", cat:"Sweets", icon:"🍬", addr:"Chandni Chowk, Cuttack", phone:"9800000002",
+      lat:20.4630, lng:85.8790, reviews:[
+        {name:"Sumitra Pattnaik", rating:5, text:"The rasgulla here is amazing — best in the area."},
+        {name:"Abhishek", rating:5, text:"Try the chhena poda, it's fantastic."}
+      ]},
+    { id:3, name:"Digital Hub Electronics", cat:"Electronics", icon:"📱", addr:"Link Road, Cuttack", phone:"9800000003",
+      lat:20.4735, lng:85.8825, reviews:[
+        {name:"Kunal Sahoo", rating:4, text:"Repair service is good, and prices are reasonable."}
+      ]},
+    { id:4, name:"Utkal Saree House", cat:"Clothing & Sarees", icon:"🥻", addr:"Naya Sadak, Cuttack", phone:"9800000004",
+      lat:20.4600, lng:85.8865, reviews:[
+        {name:"Mousumi", rating:5, text:"The Sambalpuri saree collection here is beautiful."},
+        {name:"Iti Rath", rating:4, text:"A little pricey, but the quality is worth it."}
+      ]},
+    { id:5, name:"Seba Pharmacy", cat:"Pharmacy", icon:"💊", addr:"SCB Medical Road, Cuttack", phone:"9800000005",
+      lat:20.4550, lng:85.8700, reviews:[
+        {name:"Bijay Pradhan", rating:5, text:"Open even at 11pm, really saved me once."}
+      ]},
+    { id:6, name:"Golden Bakery", cat:"Bakery", icon:"🍞", addr:"Station Bazaar, Cuttack", phone:"9800000006",
+      lat:20.4795, lng:85.8795, reviews:[
+        {name:"Neha", rating:4, text:"Fresh bread and cakes, best if you go in the morning."},
+        {name:"Arun", rating:3, text:"Good, but could use a bigger variety."}
+      ]},
+  ];
+
+  let userLoc = null; // {lat, lng}
+  let newShopLoc = null; // {lat, lng} for the shop being added
+
+  // ---------- Category filter options ----------
+  const catSelect = document.getElementById('categoryFilter');
+  function refreshCategories(){
+    const cats = [...new Set(shops.map(s=>s.cat))];
+    catSelect.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+
+  // ---------- Haversine distance ----------
+  function distanceKm(lat1, lng1, lat2, lng2){
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLng = (lng2-lng1) * Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R*c;
+  }
+
+  function avgRating(reviews){
+    if(!reviews.length) return 0;
+    return reviews.reduce((a,r)=>a+r.rating,0)/reviews.length;
+  }
+
+  function starString(avg){
+    const full = Math.round(avg);
+    return '★'.repeat(full) + '☆'.repeat(5-full);
+  }
+
+  // ---------- Render shop grid ----------
+  function renderShops(){
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const cat = catSelect.value;
+    let list = shops.filter(s=>{
+      const matchQ = !q || s.name.toLowerCase().includes(q) || s.addr.toLowerCase().includes(q);
+      const matchCat = !cat || s.cat === cat;
+      return matchQ && matchCat;
+    });
+
+    list = list.map(s=>{
+      const d = userLoc ? distanceKm(userLoc.lat, userLoc.lng, s.lat, s.lng) : null;
+      return {...s, dist:d};
+    });
+
+    if(userLoc){
+      list.sort((a,b)=> a.dist - b.dist);
+    }
+
+    const grid = document.getElementById('shopGrid');
+    grid.innerHTML = '';
+    document.getElementById('shopCount').textContent = list.length + ' shops';
+
+    list.forEach(s=>{
+      const avg = avgRating(s.reviews);
+      const card = document.createElement('div');
+      card.className = 'shop-card';
+      card.innerHTML = `
+        <div class="rivet tl"></div><div class="rivet tr"></div><div class="rivet bl"></div><div class="rivet br"></div>
+        <div class="shop-top">
+          <div class="shop-icon" style="background:var(--paper-2);">${s.icon}</div>
+          <div>
+            <div class="shop-name">${s.name}</div>
+            <div class="shop-cat">${s.cat}</div>
+          </div>
+        </div>
+        <div class="shop-addr">📍 ${s.addr}</div>
+        <div class="shop-meta">
+          <div class="stars">${s.reviews.length ? starString(avg) : 'New'} ${s.reviews.length ? `<small>(${s.reviews.length})</small>` : ''}</div>
+          <div class="dist mono">${s.dist!==null ? s.dist.toFixed(1)+' km' : 'Share location for distance'}</div>
+        </div>
+        <div class="shop-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openReviews(${s.id})">Reviews (${s.reviews.length})</button>
+          <a class="btn btn-teal btn-sm" style="text-align:center;" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank" rel="noopener">Directions</a>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', renderShops);
+  catSelect.addEventListener('change', renderShops);
+
+  // ---------- Geolocation (browsing customer) ----------
+  document.getElementById('locateBtn').addEventListener('click', ()=>{
+    const statusEl = document.getElementById('locStatus');
+    if(!navigator.geolocation){
+      statusEl.textContent = 'Your browser does not support location.';
+      return;
+    }
+    statusEl.textContent = 'Getting your location...';
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        statusEl.textContent = '✓ Location found — showing the nearest shops first.';
+        statusEl.classList.add('ok');
+        renderShops();
+      },
+      err=>{
+        statusEl.textContent = 'Could not get your location. Please allow location access in your browser settings.';
+      }
+    );
+  });
+
+  // ---------- Custom category toggle ----------
+  const sCat = document.getElementById('sCat');
+  const customCatRow = document.getElementById('customCatRow');
+  const sCatCustom = document.getElementById('sCatCustom');
+  sCat.addEventListener('change', ()=>{
+    if(sCat.value === '__custom'){
+      customCatRow.classList.remove('hidden');
+      sCatCustom.required = true;
+    } else {
+      customCatRow.classList.add('hidden');
+      sCatCustom.required = false;
+    }
+  });
+
+  // ---------- Use my location for the shop being added ----------
+  document.getElementById('useMyLocBtn').addEventListener('click', ()=>{
+    const statusEl = document.getElementById('shopLocStatus');
+    if(!navigator.geolocation){
+      statusEl.textContent = 'Your browser does not support location.';
+      return;
+    }
+    statusEl.textContent = 'Getting your current location...';
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        newShopLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        statusEl.textContent = `✓ Pinned at ${newShopLoc.lat.toFixed(4)}, ${newShopLoc.lng.toFixed(4)} — this exact spot will be used on the map.`;
+        statusEl.classList.add('ok');
+      },
+      err=>{
+        statusEl.textContent = 'Could not get your location — the address you typed will be used instead.';
+      }
+    );
+  });
+
+  // ---------- Reviews modal ----------
+  let activeShopId = null;
+  function openReviews(id){
+    activeShopId = id;
+    const s = shops.find(x=>x.id===id);
+    document.getElementById('modalShopName').textContent = s.name;
+    const avg = avgRating(s.reviews);
+    document.getElementById('modalShopRating').innerHTML = s.reviews.length
+      ? `${starString(avg)} <small>${avg.toFixed(1)} · ${s.reviews.length} reviews</small>`
+      : 'No reviews yet — be the first to leave one!';
+    const list = document.getElementById('reviewsList');
+    list.innerHTML = s.reviews.map(r=>`
+      <div class="review">
+        <div class="review-top"><span>${r.name}</span><span class="mono">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></div>
+        <p>${r.text}</p>
+      </div>
+    `).join('') || '<p style="color:var(--ink-soft);font-size:14px;">No reviews yet.</p>';
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+  document.getElementById('modalClose').addEventListener('click', ()=>{
+    document.getElementById('modalOverlay').classList.remove('show');
+  });
+  document.getElementById('modalOverlay').addEventListener('click', e=>{
+    if(e.target.id==='modalOverlay') e.target.classList.remove('show');
+  });
+
+  document.getElementById('reviewForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const s = shops.find(x=>x.id===activeShopId);
+    s.reviews.push({
+      name: document.getElementById('rName').value.trim(),
+      rating: Number(document.getElementById('rRating').value),
+      text: document.getElementById('rText').value.trim()
+    });
+    document.getElementById('reviewForm').reset();
+    openReviews(activeShopId);
+    renderShops();
+  });
+
+  // ---------- Add shop (demo payment flow) ----------
+  document.getElementById('addShopForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const name = document.getElementById('sName').value.trim();
+    let cat = sCat.value;
+    if(cat === '__custom'){
+      cat = sCatCustom.value.trim();
+    }
+    const addr = document.getElementById('sAddr').value.trim();
+    const icon = document.getElementById('sIcon').value;
+    if(!name || !cat || !addr) return;
+
+    // Use the precise location if the owner tapped "Use My Location",
+    // otherwise place it with a small offset near Cuttack center so it still appears on the map.
+    const base = { lat:20.4625, lng:85.8830 };
+    const loc = newShopLoc || {
+      lat: base.lat + (Math.random()-0.5)*0.03,
+      lng: base.lng + (Math.random()-0.5)*0.03
+    };
+
+    const newShop = {
+      id: Date.now(),
+      name, cat, icon, addr,
+      phone: document.getElementById('sPhone').value.trim(),
+      lat: loc.lat,
+      lng: loc.lng,
+      reviews: []
+    };
+    shops.unshift(newShop);
+    refreshCategories();
+    renderShops();
+
+    const msg = document.getElementById('addShopMsg');
+    msg.textContent = `✓ Payment successful (demo) — "${name}" is now listed on City Mart!`;
+    msg.style.color = 'var(--teal-dark)';
+    msg.classList.add('show');
+    document.getElementById('addShopForm').reset();
+    customCatRow.classList.add('hidden');
+    newShopLoc = null;
+    document.getElementById('shopLocStatus').textContent = 'Type an address, or tap "Use My Location" to pin your exact spot on the map.';
+    document.getElementById('shopLocStatus').classList.remove('ok');
+    document.getElementById('shops').scrollIntoView({behavior:'smooth'});
+  });
+
+  refreshCategories();
+  renderShops();
+</script>
+</body>
+</html>
